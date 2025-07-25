@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Categories from "./pages/Categories";
 import Activities from "./pages/Activities";
 import Users from "./pages/Users";
+import OrganizationDetail from "./pages/OrganizationDetail";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="categories" element={<Categories />} />
               <Route path="activities" element={<Activities />} />
               <Route path="users" element={<Users />} />
+              <Route path="organization" element={<OrganizationDetail />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

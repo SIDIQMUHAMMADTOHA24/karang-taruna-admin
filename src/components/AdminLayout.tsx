@@ -6,6 +6,7 @@ import {
   FolderOpen, 
   Calendar, 
   Users,
+  Building,
   LogOut,
   Menu,
   X
@@ -28,6 +29,7 @@ const AdminLayout = () => {
     { icon: FolderOpen, label: 'Categories', path: '/admin/categories' },
     { icon: Calendar, label: 'Activities', path: '/admin/activities' },
     { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: Building, label: 'Data Organisasi', path: '/admin/organization' },
   ];
 
   return (
