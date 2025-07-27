@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ImageUpload from "@/components/ImageUpload";
 
 interface User {
   id: number;
@@ -165,8 +166,28 @@ export default function Users() {
     setIsEditDialogOpen(true);
   };
 
+  const deleteImageFromStorage = async (imageUrl: string) => {
+    if (!imageUrl) return;
+    
+    try {
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      
+      if (imageUrl.includes('/storage/v1/object/public/uploads/')) {
+        await supabase.storage
+          .from('uploads')
+          .remove([fileName]);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     try {
+      // Get the user to access its image_url
+      const userToDelete = users.find(user => user.id === id);
+      
       // Delete user from database
       const { error } = await supabase
         .from('users' as any)
@@ -177,6 +198,11 @@ export default function Users() {
         console.error('Error deleting user:', error);
         toast.error('Gagal menghapus user');
         return;
+      }
+
+      // Delete associated image if exists
+      if (userToDelete?.image_url) {
+        await deleteImageFromStorage(userToDelete.image_url);
       }
 
       toast.success('User berhasil dihapus');
@@ -232,16 +258,11 @@ export default function Users() {
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="image_url">URL Gambar</Label>
-                <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </div>
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Foto Profile"
+              />
               <div>
                 <Label htmlFor="jabatan">Jabatan</Label>
                 <Select value={formData.jabatan_id} onValueChange={(value) => setFormData({ ...formData, jabatan_id: value })}>
@@ -331,16 +352,11 @@ export default function Users() {
                                 required
                               />
                             </div>
-                            <div>
-                              <Label htmlFor="edit-image_url">URL Gambar</Label>
-                              <Input
-                                id="edit-image_url"
-                                type="url"
-                                value={formData.image_url}
-                                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                                placeholder="https://example.com/avatar.jpg"
-                              />
-                            </div>
+                            <ImageUpload
+                              value={formData.image_url}
+                              onChange={(url) => setFormData({ ...formData, image_url: url })}
+                              label="Foto Profile"
+                            />
                             <div>
                               <Label htmlFor="edit-jabatan">Jabatan</Label>
                               <Select value={formData.jabatan_id} onValueChange={(value) => setFormData({ ...formData, jabatan_id: value })}>

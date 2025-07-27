@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Calendar as CalendarIcon, MapPin, Users } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Activity {
   id: number;
@@ -139,16 +140,41 @@ const Activities = () => {
     setDialogOpen(true);
   };
 
+  const deleteImageFromStorage = async (imageUrl: string) => {
+    if (!imageUrl) return;
+    
+    try {
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      
+      if (imageUrl.includes('/storage/v1/object/public/uploads/')) {
+        await supabase.storage
+          .from('uploads')
+          .remove([fileName]);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this activity?')) return;
 
     try {
+      // Get the activity to access its image_url
+      const activityToDelete = activities.find(act => act.id === id);
+      
       const { error } = await supabase
         .from('activities')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Delete associated image if exists
+      if (activityToDelete?.image_url) {
+        await deleteImageFromStorage(activityToDelete.image_url);
+      }
       
       toast({
         title: "Success",
@@ -281,28 +307,21 @@ const Activities = () => {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="people">People Involved</Label>
-                  <Input
-                    id="people"
-                    value={formData.people}
-                    onChange={(e) => setFormData({ ...formData, people: e.target.value })}
-                    placeholder="Names or roles of people involved"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="image_url">Image URL (optional)</Label>
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                    type="url"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="people">People Involved</Label>
+                <Input
+                  id="people"
+                  value={formData.people}
+                  onChange={(e) => setFormData({ ...formData, people: e.target.value })}
+                  placeholder="Names or roles of people involved"
+                />
               </div>
+
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Activity Image (optional)"
+              />
               
               <div className="flex gap-2 pt-4">
                 <Button type="submit" variant="admin" className="flex-1">
