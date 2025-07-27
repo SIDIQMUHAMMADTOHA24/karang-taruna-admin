@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserCheck } from 'lucide-react';
+import { escapeInput, containsDangerousInput} from "@/utils/SanitationInput";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -27,8 +28,45 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
+    const sanitizedEmail = escapeInput(email.trim());
+    const sanitizedPassword = escapeInput(password);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      toast({
+        title: "Invalid Email",
+        description: "Format email tidak valid.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+
     try {
-      const { error } = await signIn(email, password);
+      if (containsDangerousInput(sanitizedEmail) || containsDangerousInput(sanitizedPassword)) {
+        toast({
+          title: "Invalid Input",
+          description: "Please check your email and password for invalid characters.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+
+      if (sanitizedEmail.length > 100 || sanitizedPassword.length > 100) {
+        toast({
+          title: "Input Terlalu Panjang",
+          description: "Maksimal 100 karakter diperbolehkan.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+
+      const { error } = await signIn(sanitizedEmail, sanitizedPassword);
       
       if (error) {
         toast({
@@ -75,6 +113,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
                 placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
