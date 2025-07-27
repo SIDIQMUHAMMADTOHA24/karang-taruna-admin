@@ -194,7 +194,7 @@ export default function ImageUpload({ value, onChange, label = "Image", required
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png, image/jpeg"
         onChange={handleFileSelect}
         className="hidden"
       />
