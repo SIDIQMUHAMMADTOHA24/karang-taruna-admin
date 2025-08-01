@@ -194,6 +194,12 @@ const Categories = () => {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Category Image (optional)"
+              />
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -216,12 +222,6 @@ const Categories = () => {
                   rows={3}
                 />
               </div>
-              
-              <ImageUpload
-                value={formData.image_url}
-                onChange={(url) => setFormData({ ...formData, image_url: url })}
-                label="Category Image (optional)"
-              />
               
               <div className="flex gap-2 pt-4">
                 <Button type="submit" variant="admin" className="flex-1">

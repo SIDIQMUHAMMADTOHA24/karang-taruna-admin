@@ -241,6 +241,12 @@ const Activities = () => {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Activity Image (optional)"
+              />
+              
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
@@ -316,12 +322,6 @@ const Activities = () => {
                   placeholder="Names or roles of people involved"
                 />
               </div>
-
-              <ImageUpload
-                value={formData.image_url}
-                onChange={(url) => setFormData({ ...formData, image_url: url })}
-                label="Activity Image (optional)"
-              />
               
               <div className="flex gap-2 pt-4">
                 <Button type="submit" variant="admin" className="flex-1">
