@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -33,6 +34,8 @@ const Activities = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -209,6 +212,11 @@ const Activities = () => {
     return category?.title || 'Uncategorized';
   };
 
+  const handleActivityClick = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setDetailDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -234,13 +242,14 @@ const Activities = () => {
               Add Activity
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingActivity ? 'Edit Activity' : 'Add New Activity'}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+
               <ImageUpload
                 value={formData.image_url}
                 onChange={(url) => setFormData({ ...formData, image_url: url })}
@@ -279,39 +288,51 @@ const Activities = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Activity description"
-                  required
-                  rows={3}
-                />
+              <div className="space-y-6">
+                {/* Quill Editor */}
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <ReactQuill
+                    value={formData.description}
+                    onChange={(value) => setFormData({ ...formData, description: value })}
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['image', 'code-block'],
+                      ]
+                    }}
+                    theme="snow"
+                    placeholder="Activity description"
+                     style={{ marginBottom: '1.5rem' }}
+                  />
+                </div>
+
+                {/* Grid Fields */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="Activity location"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Activity location"
-                  />
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="people">People Involved</Label>
@@ -342,11 +363,11 @@ const Activities = () => {
 
       <div className="grid gap-6">
         {activities.map((activity) => (
-          <Card key={activity.id} className="hover:shadow-md transition-shadow">
+          <Card key={activity.id} className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-xl mb-2">{activity.title}</CardTitle>
+                <div className="flex-1" onClick={() => handleActivityClick(activity)}>
+                  <CardTitle className="text-xl mb-2 hover:text-primary transition-colors">{activity.title}</CardTitle>
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <CalendarIcon className="h-4 w-4" />
@@ -370,7 +391,10 @@ const Activities = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleEdit(activity)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(activity);
+                    }}
                     className="h-8 w-8"
                   >
                     <Edit className="h-4 w-4" />
@@ -378,7 +402,10 @@ const Activities = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(activity.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(activity.id);
+                    }}
                     className="h-8 w-8 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -386,10 +413,19 @@ const Activities = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent onClick={() => handleActivityClick(activity)}>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-2">
-                  <p className="text-foreground mb-3">{activity.description}</p>
+                  <div 
+                    className="text-foreground mb-3 prose prose-sm max-w-none line-clamp-3"
+                    dangerouslySetInnerHTML={{ __html: activity.description }}
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}
+                  />
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
                       {getCategoryName(activity.category_id)}
@@ -416,6 +452,84 @@ const Activities = () => {
           </Card>
         ))}
       </div>
+
+      {/* Activity Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedActivity && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedActivity.title}</DialogTitle>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarIcon className="h-4 w-4" />
+                    {selectedActivity.date ? new Date(selectedActivity.date).toLocaleDateString() : 'No date set'}
+                  </span>
+                  {selectedActivity.location && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {selectedActivity.location}
+                    </span>
+                  )}
+                  {selectedActivity.people && (
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {selectedActivity.people}
+                    </span>
+                  )}
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {selectedActivity.image_url && (
+                  <div className="w-full max-h-96 bg-muted rounded-lg overflow-hidden">
+                    <img 
+                      src={selectedActivity.image_url} 
+                      alt={selectedActivity.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Description</h3>
+                  <div 
+                    className="prose prose-sm max-w-none text-foreground"
+                    dangerouslySetInnerHTML={{ __html: selectedActivity.description }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm px-3 py-1 bg-primary/10 text-primary rounded-full">
+                      {getCategoryName(selectedActivity.category_id)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      Created: {new Date(selectedActivity.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDetailDialogOpen(false);
+                        handleEdit(selectedActivity);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {activities.length === 0 && (
         <div className="text-center py-12">
