@@ -9,7 +9,8 @@ import {
   Building,
   LogOut,
   Menu,
-  X
+  X,
+  Images
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -30,6 +31,7 @@ const AdminLayout = () => {
     { icon: Calendar, label: 'Activities', path: '/admin/activities' },
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Building, label: 'Data Organisasi', path: '/admin/organization' },
+    { icon: Images, label: 'Gallery', path: '/admin/gallery' },
   ];
 
   return (
